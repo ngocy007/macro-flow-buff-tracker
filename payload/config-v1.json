@@ -1,0 +1,189 @@
+{
+ "schemaVersion": 9,
+ "target": null,
+ "searchRegion": {
+  "x": 0.0,
+  "y": 0.2,
+  "width": 0.3,
+  "height": 0.5
+ },
+ "template": null,
+ "settings": {
+  "cycleMs": 20000,
+  "deadlineGraceMs": 1500,
+  "threshold": 0.95,
+  "confirmFrames": 2,
+  "missingFrames": 3,
+  "sound": {
+   "triggerEnabled": true,
+   "prewarnFiveEnabled": true,
+   "prewarnFourEnabled": true,
+   "prewarnThreeEnabled": true,
+   "prewarnTwoEnabled": true,
+   "prewarnOneEnabled": true,
+   "prewarnMode": "countdown",
+   "triggerSource": {
+    "type": "custom",
+    "assetId": "triggered-1789643004043",
+    "fileName": "1789643004043.wav"
+   },
+   "prewarnFiveSource": {
+    "type": "custom",
+    "assetId": "vi-five",
+    "fileName": "vi-five.wav"
+   },
+   "prewarnFourSource": {
+    "type": "custom",
+    "assetId": "vi-four",
+    "fileName": "vi-four.wav"
+   },
+   "prewarnThreeSource": {
+    "type": "custom",
+    "assetId": "vi-three",
+    "fileName": "vi-three.wav"
+   },
+   "prewarnTwoSource": {
+    "type": "custom",
+    "assetId": "vi-two",
+    "fileName": "vi-two.wav"
+   },
+   "prewarnOneSource": {
+    "type": "custom",
+    "assetId": "vi-one",
+    "fileName": "vi-one.wav"
+   },
+   "volume": 0.45
+  },
+  "overlay": {
+   "x": 760,
+   "y": 820,
+   "showWaitingDot": false,
+   "excludeFromCapture": false,
+   "width": 330,
+   "height": 92,
+   "colorScheme": "gold",
+   "hideUntilSeen": false
+  },
+  "capture": {
+   "showSystemBorder": true,
+   "engine": "wgc",
+   "hdrMode": false
+  }
+ },
+ "buffGroup": {
+  "icons": [
+   {
+    "name": "Chu Thiên-Kim",
+    "iconRect": [
+     0.2156,
+     0.3639,
+     0.0208,
+     0.0389
+    ],
+    "hueMin": 30.0,
+    "hueMax": 55.0,
+    "saturationMin": 0.3,
+    "valueMin": 0.5,
+    "goldRatioThreshold": 0.15,
+    "cycleMs": 20000,
+    "durationMs": 5000,
+    "labelTemplate": null,
+    "labelOffset": null,
+    "iconTemplate": "iVBORw0KGgoAAAANSUhEUgAAACgAAAAqCAYAAADBNhlmAAAE90lEQVR4Ae3AA6AkWZbG8f937o3IzKdyS2Oubdu2bdu2bdu2bWmMnpZKr54yMyLu+Xa3anqmhztr1a++2mu8sfmfi+B/NoL/2aj8O5y+ccGL6tydS/4NqPwrnb5xwb/F6RsXAJy7c8m/ApV/hdM3Lvj3On3jAoBzdy55ERC8iE7fuOA/0ukbF7wICP5no/IiOH3jgv8mVP6DPGJjG4ByaqKdrzz5aJ9/yekbF5y7c8kLQfDv9IiNbR6xsQ1AOTXxme/wWgA8YmObR2xs8+9E8C84feOCF+QRG9sAlFMT5dTEO73UwwE4+dibKacmyqmJR2xs84iNbV6Q0zcueCEI/o0esbENQDk1AdBxjEc98kYAPuo1b+F+5dQEwCM2tnlBTt+44AUgeCFO37jg+XnExjYA5dTE/d7jtV6GB3rZMw/hfuXURDk18YiNbf6VCP6NyqmJ++3013Pilpt4oDd/7VvY6a/nuT1iY5vn5/SNC54PKv9Kj9jY5oE6jvH2r/IoAA7nN/NADz92G0+5dD17w90AlFMT7Xzl+Tl355Lng+AFOH3jgheknJoA6DjGDTdcy4lbbuL5efPXvgWAnf56HugRG9s8t9M3Lng+CJ7L6RsXnL5xwfPziI1tHmjRb/Ber3Y9L8jh/GZe5uZr0Ik5O/31AJRTEy/I6RsXPBeCf6VyagJgp7+eE6e3OZzfzAvz8q/6EhwvHc/tERvbvAgI/h1OjSMvipc4vcWJ09vs9NcDUE5NvCCnb1zwAAQPcPrGBS/IIza2KacmHuh813Hxtjv4lzzqpR4LgE7M6TjG/R6xsc3zc/rGBc9E8G+w01+PTsw5NY7c/uQn8KJ4idNbHC8di34DgHJq4kVA8CJ4xMY2z+01rj3B/e742z/mX/Kol3osz88jNrZ5IQheROXUxP3e5i3egEe91GM51S2534V7d/mXPOjUCXRiTscxAMqpiX8BwTOdvnHB8/OIjW0eaKe/ngc/6sUZZmd4ydd7fe53dO8TABhmZxhmZxhmZxhmZxhmZxhmZxhmZ3iFl34E/0oE/0of8E6vx4X77gZgmJ3hxIMfzYWzBwDc8bd/zAszzM7w0ls7LPoN/iWnb1wAELwIyqkJgJ3+eobZGR7o2se+DCfPbHG/wyf/FS/My7/qS/CvQAU4feOCF8Vbv8FrcvKa63lu/Uu+Mn/7G7/OyTNb3P7kJ/CSt9zE1s0vyfN3PY+84e/481vv5kVA8CLqOMZDXurleH62bn5JZqdv4MLZAwD+9jd+nRfmVV7/dXkREbyI3uXN3pgX5iGv+FqcHxecHxecHxf8xc//MC/IyWuu50E3PJIXAcGLoJ2vPOSlXo4X5uQ11/M6b/xqnO86zncdf3fugFuf+Pe8IG/5pm9GO1/5F6BXe4039ukbF7wgj9jYppyaANjpr+eBdGLOc/PFFQ+kE3Pu54sr7rc33E07X3ny0T4vyLk7l1SAc3cuOX3jgufnyUf7PIJtAC5ylnJq4lnu5V92L8+jna9A5clH+/wLCF4ETz7a537tfOXfo52vADz5aJ8XAZUX0ZOP9gF4xMY27Xzl3+PJR/v8S87duQSg8kzn7lxy+sYF/5InH+3zX4jKM52+ccH/QFSe6dydSwBO37jgv9u5O5c8E5X/Yc7dueQBqDyXc3cueaDTNy74z3LuziX/Air/gnN3LvlvRPA/G/8INRr4UIyUzUwAAAAASUVORK5CYII=",
+    "iconTemplateSize": 40,
+    "matchThreshold": 0.9,
+    "searchRect": [
+     0.0,
+     0.2,
+     0.3,
+     0.5
+    ],
+    "textRect": [
+     3.8,
+     0.0,
+     2.2,
+     1.1
+    ],
+    "textColor": null,
+    "textTolerance": null,
+    "enabled": true,
+    "triggerSound": {
+     "type": "custom",
+     "assetId": "vi-ready-chuthienkim",
+     "fileName": "vi-ready-chuthienkim.wav"
+    },
+    "cdEndSound": {
+     "type": "custom",
+     "assetId": "vi-ready-chuthienkim",
+     "fileName": "vi-ready-chuthienkim.wav"
+    },
+    "prewarnEnabled": true,
+    "chaoguangOnly": false,
+    "sharedCdGroup": null,
+    "templateRefHeight": 1080
+   },
+   {
+    "name": "Côn Ngô Đoạn Ngọc",
+    "iconRect": [
+     0.2156,
+     0.4074,
+     0.0208,
+     0.0389
+    ],
+    "hueMin": 30.0,
+    "hueMax": 55.0,
+    "saturationMin": 0.3,
+    "valueMin": 0.5,
+    "goldRatioThreshold": 0.15,
+    "cycleMs": 20000,
+    "durationMs": 12000,
+    "labelTemplate": null,
+    "labelOffset": null,
+    "iconTemplate": "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",
+    "iconTemplateSize": 42,
+    "matchThreshold": 0.9,
+    "searchRect": null,
+    "textRect": [
+     3.8,
+     0.0,
+     2.2,
+     1.1
+    ],
+    "textColor": null,
+    "textTolerance": null,
+    "enabled": true,
+    "triggerSound": {
+     "type": "custom",
+     "assetId": "vi-ready-conngo",
+     "fileName": "vi-ready-conngo.wav"
+    },
+    "cdEndSound": {
+     "type": "custom",
+     "assetId": "vi-ready-conngo",
+     "fileName": "vi-ready-conngo.wav"
+    },
+    "prewarnEnabled": true,
+    "chaoguangOnly": false,
+    "sharedCdGroup": null,
+    "templateRefHeight": 1080
+   }
+  ],
+  "useColorDetection": true,
+  "autoRelocation": false,
+  "relocateFrames": 8,
+  "monitorOnlyInCombat": false,
+  "combatRegion": [
+   0.169406,
+   0.144171,
+   0.670018,
+   0.629633
+  ],
+  "combatColor": [
+   251,
+   255,
+   26
+  ],
+  "combatTolerance": 48,
+  "chaoguangPlayer": true
+ }
+}

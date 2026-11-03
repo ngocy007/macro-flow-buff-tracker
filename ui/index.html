@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trợ thủ Buff</title>
+  <link rel="icon" href="favicon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app"></div>
+  <script src="common.js"></script>
+  <script src="overlay.js"></script>
+  <script src="manager.js"></script>
+  <script>
+    (function boot() {
+      var label = (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.metadata.currentWindow.label) || 'main';
+      if (label === 'buff-overlay') { document.documentElement.classList.add('is-overlay'); Overlay.init(); }
+      else { Manager.init(); }
+    })();
+  </script>
+</body>
+</html>
