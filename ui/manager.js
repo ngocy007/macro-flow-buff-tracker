@@ -626,7 +626,7 @@ var Manager = (function () {
       (r[0].config.buffGroup && r[0].config.buffGroup.icons || []).forEach(function (ic) {
         [ic.triggerSound, ic.cdEndSound].forEach(function (o) { if (o && o.assetId) used[o.assetId] = true; });
       });
-      M.assets = (r[1] || []).filter(function (x) { return !/^(fm|vm)-/.test(x.assetId) || used[x.assetId]; });
+      M.assets = (r[1] || []).filter(function (x) { return !/^(fm|vm|prewarn)-/.test(x.assetId) || used[x.assetId]; });
       var ORDER = ['vi-five', 'vi-four', 'vi-three', 'vi-two', 'vi-one', 'vi-ready', 'vi-ready-chuthienkim', 'vi-ready-conngo'];
       M.assets.sort(function (x, y) {
         var ix = ORDER.indexOf(x.assetId), iy = ORDER.indexOf(y.assetId);
