@@ -3,7 +3,7 @@
 var Overlay = (function () {
   var state = { mode: 'hidden', buffs: [], editable: false, colorScheme: 'gold', hideUntilSeen: false };
   var appearance = { opacity: 1, fontScale: 1, paddingScale: 1, textColor: null, hideFrame: false };
-  var root, rowsBox, hint, lastH = 0;
+  var root, rowsBox, hint, lastH = 0, timers = [];
 
   var STAGE_LABEL = { unknown: 'Chờ', active: 'Hiệu lực', cooling: 'Hồi chiêu', readySoon: 'Sắp xong', ready: 'Sẵn sàng' };
 
@@ -30,10 +30,14 @@ var Overlay = (function () {
   function render() {
     if (!root) return;
     var show = state.mode !== 'hidden';
-    var buffs = state.buffs || [];
     var now = Date.now();
     var editing = state.mode === 'editing';
     if (state.mode === 'waiting' && state.hideUntilSeen) show = false;
+    // manual timers ride along as extra rows, each counting down to its own end time
+    var buffs = (show ? state.buffs || [] : []).concat(timers.map(function (t) {
+      return { name: t.name, stage: 'cooling', expectedAtUnixMs: t.endsAtUnixMs, isTimer: true };
+    }));
+    if (timers.length) show = true;
     root.style.display = show ? '' : 'none';
     root.classList.toggle('editing', editing);
     root.classList.toggle('scheme-bw', state.colorScheme === 'blackWhite');
@@ -52,7 +56,7 @@ var Overlay = (function () {
       var r = rowsBox.children[i];
       r.dataset.stage = v.stage;
       r.children[0].textContent = b.name;
-      r.children[1].textContent = v.label;
+      r.children[1].textContent = b.isTimer ? (v.stage === 'ready' ? 'Hết giờ' : 'Hẹn giờ') : v.label;
       r.children[2].textContent = v.text;
       if (v.stage === 'readySoon' || v.stage === 'ready') anyWarn = true;
     });
@@ -92,6 +96,8 @@ var Overlay = (function () {
       try { window.__TAURI__.window.getCurrentWindow().startDragging(); } catch (x) { /* ignore */ }
     });
     API.listen('buff-overlay-state', function (s) { state = Object.assign(state, s); render(); });
+    API.listen('timer-state', function (s) { timers = (s && s.timers) || []; render(); });
+    API.invoke('get_timer_state').then(function (s) { timers = (s && s.timers) || []; render(); }).catch(function () {});
     API.listen('buff-overlay-appearance', function (a) { appearance = Object.assign(appearance, a); applyAppearance(); });
     API.invoke('get_buff_overlay_state').then(function (s) { if (s) { state = Object.assign(state, s); render(); } }).catch(function () {});
     API.invoke('get_buff_overlay_appearance').then(function (a) { if (a) { appearance = Object.assign(appearance, a); applyAppearance(); } }).catch(function () {});

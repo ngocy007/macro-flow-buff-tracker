@@ -5,6 +5,8 @@ pub mod audio;
 pub mod capture;
 pub mod detect;
 pub mod hotkey;
+pub mod macros;
+pub mod timers;
 pub mod monitor;
 
 use base64::Engine;
@@ -264,6 +266,58 @@ fn set_buff_hotkey(app: AppHandle, sh: S, hotkey: String) -> Res<Value> {
     }
     sh.save();
     Ok(emit_state(&app, &sh))
+}
+
+/// Save the whole macro list and re-register every macro hotkey.
+#[tauri::command]
+fn save_macros(app: AppHandle, sh: S, macros: Value) -> Res<Value> {
+    if !macros.is_array() {
+        return Err("Danh sách macro không hợp lệ".into());
+    }
+    sh.cfg.lock()["macros"] = macros;
+    sh.save();
+    let cfg = sh.cfg.lock().clone();
+    let errors = macros::register_all(&cfg);
+    Ok(json!({ "state": emit_state(&app, &sh), "errors": errors }))
+}
+
+#[tauri::command]
+fn play_macro(app: AppHandle, sh: S, id: String, delay_ms: Option<u64>) -> Res<()> {
+    let cfg = sh.cfg.lock().clone();
+    macros::start(&app, &cfg, &id, delay_ms.unwrap_or(0))
+}
+
+#[tauri::command]
+fn stop_macro(app: AppHandle) {
+    macros::stop(&app);
+}
+
+/// Save the whole timer list and re-register every timer hotkey.
+#[tauri::command]
+fn save_timers(app: AppHandle, sh: S, timers: Value) -> Res<Value> {
+    if !timers.is_array() {
+        return Err("Danh sách hẹn giờ không hợp lệ".into());
+    }
+    sh.cfg.lock()["timers"] = timers;
+    sh.save();
+    let cfg = sh.cfg.lock().clone();
+    let errors = timers::register_all(&cfg);
+    Ok(json!({ "state": emit_state(&app, &sh), "errors": errors }))
+}
+
+#[tauri::command]
+fn start_timer(app: AppHandle, sh: S, id: String) -> Res<()> {
+    timers::start(&app, &sh, &id)
+}
+
+#[tauri::command]
+fn cancel_timer(app: AppHandle, id: String) {
+    timers::cancel(&app, &id);
+}
+
+#[tauri::command]
+fn get_timer_state() -> Value {
+    timers::state()
 }
 
 /// Pick a .wav with the native Windows dialog and copy it into sound-assets.
@@ -718,13 +772,29 @@ pub fn run() {
             app.manage(sh.clone());
             let handle = app.handle().clone();
             let sh2 = sh.clone();
-            hotkey::spawn(move || toggle_monitor(&handle, &sh2));
+            hotkey::spawn(move |id| {
+                if id == hotkey::MONITOR_ID {
+                    toggle_monitor(&handle, &sh2);
+                } else {
+                    let cfg = sh2.cfg.lock().clone();
+                    macros::on_hotkey(&handle, &cfg, id);
+                }
+            });
             let saved = sh.cfg.lock()["settings"]["hotkey"].as_str().unwrap_or("").to_string();
             if !saved.is_empty() {
                 if let Err(e) = hotkey::set(&saved) {
                     eprintln!("[hotkey] {e}");
                 }
             }
+            let cfg = sh.cfg.lock().clone();
+            for e in macros::register_all(&cfg) {
+                eprintln!("[macro hotkey] {e}");
+            }
+            for e in timers::register_all(&cfg) {
+                eprintln!("[timer hotkey] {e}");
+            }
+            timers::spawn_ticker(app.handle().clone(), sh.clone());
+            timers::spawn_hook(app.handle().clone(), sh.clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -763,6 +833,13 @@ pub fn run() {
             get_buff_overlay_appearance,
             preview_buff_overlay_appearance,
             set_buff_overlay_edit_mode,
+            save_macros,
+            play_macro,
+            stop_macro,
+            save_timers,
+            start_timer,
+            cancel_timer,
+            get_timer_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running macro-flow-recovered");
