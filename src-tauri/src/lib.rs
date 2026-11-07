@@ -363,6 +363,12 @@ async fn update_buff_assistant_settings(app: AppHandle, sh: S<'_>, settings: Val
 fn set_buff_group_config(app: AppHandle, sh: S, buff_group: Value) -> Res<Value> {
     sh.cfg.lock()["buffGroup"] = buff_group;
     sh.save();
+    // Positioning mode shows static sample rows: rebuild them so toggled buffs appear / disappear at once.
+    if sh.edit_mode.load(Ordering::Relaxed) && sh.run.lock().is_none() {
+        let st = edit_overlay_state(&sh);
+        *sh.overlay.lock() = st.clone();
+        let _ = app.emit("buff-overlay-state", st);
+    }
     Ok(emit_state(&app, &sh))
 }
 
@@ -597,6 +603,36 @@ fn play_buff_assistant_sound(sh: S, cue: String, source: Value, volume: f64) -> 
     Ok(())
 }
 
+/// Overlay state used while positioning the overlay: one sample row per *enabled* buff.
+fn edit_overlay_state(sh: &Shared) -> Value {
+    let now = monitor::now_ms();
+    let c = sh.cfg.lock();
+    let mut rows: Vec<Value> = vec![];
+    if let Some(arr) = c["buffGroup"]["icons"].as_array() {
+        for (i, ic) in arr.iter().filter(|ic| ic["enabled"].as_bool() != Some(false)).enumerate() {
+            let (stage, exp) = match i % 3 {
+                0 => ("cooling", now + 12000),
+                1 => ("readySoon", now + 3500),
+                _ => ("active", now + 3000),
+            };
+            rows.push(json!({
+                "name": ic["name"].as_str().unwrap_or("Buff"), "stage": stage,
+                "remainingMs": 12000, "isElapsed": false, "ocrSeconds": null, "mergedGroup": null,
+                "activeUntilUnixMs": if stage == "active" { Some(exp) } else { None },
+                "expectedAtUnixMs": if stage == "active" { Some(now + 20000) } else { Some(exp) },
+                "durationMs": ic["durationMs"], "cycleMs": ic["cycleMs"],
+            }));
+        }
+    }
+    let cs = c["settings"]["overlay"]["colorScheme"].clone();
+    json!({
+        "mode": "editing", "message": "", "expectedAtUnixMs": null, "cycleMs": null,
+        "buffs": rows, "emittedAtUnixMs": now, "editable": true,
+        "colorScheme": if cs.is_null() { json!("gold") } else { cs },
+        "hideUntilSeen": c["settings"]["overlay"]["hideUntilSeen"].clone(),
+    })
+}
+
 #[tauri::command]
 fn get_buff_overlay_state(sh: S) -> Value {
     let v = sh.overlay.lock().clone();
@@ -629,43 +665,7 @@ async fn set_buff_overlay_edit_mode(app: AppHandle, sh: S<'_>, enabled: bool) ->
         if let Some(w) = app.get_webview_window("buff-overlay") {
             let _ = w.set_ignore_cursor_events(false);
         }
-        // Sample rows (one per enabled buff) so the user sees how the overlay will look while positioning.
-        let now = monitor::now_ms();
-        let (rows, cs, hide) = {
-            let c = sh.cfg.lock();
-            let mut rows: Vec<Value> = vec![];
-            if let Some(arr) = c["buffGroup"]["icons"].as_array() {
-                for (i, ic) in arr.iter().enumerate() {
-                    if ic["enabled"].as_bool() == Some(false) {
-                        continue;
-                    }
-                    let (stage, exp) = match i % 3 {
-                        0 => ("cooling", now + 12000),
-                        1 => ("readySoon", now + 3500),
-                        _ => ("active", now + 3000),
-                    };
-                    rows.push(json!({
-                        "name": ic["name"].as_str().unwrap_or("Buff"), "stage": stage,
-                        "remainingMs": 12000, "isElapsed": false, "ocrSeconds": null, "mergedGroup": null,
-                        "activeUntilUnixMs": if stage == "active" { Some(exp) } else { None },
-                        "expectedAtUnixMs": if stage == "active" { Some(now + 20000) } else { Some(exp) },
-                        "durationMs": ic["durationMs"], "cycleMs": ic["cycleMs"],
-                    }));
-                }
-            }
-            (rows, c["settings"]["overlay"]["colorScheme"].clone(), c["settings"]["overlay"]["hideUntilSeen"].clone())
-        };
-        let st = json!({
-            "mode": "editing",
-            "message": "",
-            "expectedAtUnixMs": null,
-            "cycleMs": null,
-            "buffs": rows,
-            "emittedAtUnixMs": now,
-            "editable": true,
-            "colorScheme": if cs.is_null() { json!("gold") } else { cs },
-            "hideUntilSeen": hide,
-        });
+        let st = edit_overlay_state(&sh);
         *sh.overlay.lock() = st.clone();
         let _ = app.emit("buff-overlay-state", st);
     } else {

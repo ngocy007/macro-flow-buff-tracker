@@ -1,0 +1,56 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Build release exe
+        working-directory: src-tauri
+        run: cargo build --release
+
+      - name: Package (exe + payload)
+        shell: pwsh
+        run: |
+          $dir = "TroThuBuff"
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item src-tauri/target/release/macro-flow-recovered.exe "$dir/TroThuBuff.exe"
+          Copy-Item payload "$dir/payload" -Recurse
+          Compress-Archive -Path $dir -DestinationPath TroThuBuff.zip -Force
+
+      - name: Publish new release, delete old ones
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-${{ github.run_number }}"
+          gh release create "$TAG" TroThuBuff.zip \
+            --target "${{ github.sha }}" \
+            --title "Trợ thủ Buff $TAG" \
+            --notes "Build tự động từ commit ${{ github.sha }}. Giải nén cả thư mục rồi chạy TroThuBuff.exe (giữ nguyên thư mục payload bên cạnh)." \
+            --latest
+          # remove every older release together with its tag
+          gh release list --limit 200 --json tagName --jq '.[].tagName' \
+            | grep -vx "$TAG" \
+            | while read -r old; do
+                gh release delete "$old" --cleanup-tag --yes
+              done
