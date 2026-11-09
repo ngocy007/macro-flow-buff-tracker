@@ -8,6 +8,7 @@ pub mod hotkey;
 pub mod macros;
 pub mod timers;
 pub mod monitor;
+pub mod updater;
 
 use base64::Engine;
 use parking_lot::Mutex;
@@ -366,12 +367,15 @@ fn get_feature_access_status() -> Value {
     json!({ "restrictedWorkspacesUnlocked": false })
 }
 #[tauri::command]
-fn check_for_update() -> Value {
-    json!({ "currentVersion": env!("CARGO_PKG_VERSION"), "update": null })
+async fn check_for_update() -> Res<Value> {
+    tauri::async_runtime::spawn_blocking(updater::check).await.map_err(|e| e.to_string())?
 }
 #[tauri::command]
-fn install_update() -> Res<()> {
-    Err("Cập nhật tự động đã bị tắt trong bản khôi phục".into())
+async fn install_update(app: AppHandle) -> Res<()> {
+    tauri::async_runtime::spawn_blocking(updater::install).await.map_err(|e| e.to_string())??;
+    updater::relaunch()?;
+    app.exit(0);
+    Ok(())
 }
 #[tauri::command]
 fn submit_feedback(_content: String) -> Res<()> {
@@ -770,6 +774,19 @@ pub fn run() {
                 overlay: Mutex::new(Value::Null),
             });
             app.manage(sh.clone());
+            updater::cleanup();
+            if updater::current_build() > 0 {
+                // silent check shortly after launch; the UI shows a prompt if a newer build exists
+                let h = app.handle().clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(4));
+                    if let Ok(v) = updater::check() {
+                        if !v["update"].is_null() {
+                            let _ = h.emit("app-update-available", v);
+                        }
+                    }
+                });
+            }
             let handle = app.handle().clone();
             let sh2 = sh.clone();
             hotkey::spawn(move |id| {

@@ -634,6 +634,51 @@ var Manager = (function () {
     $('#advMissing').onchange = function (e) { s.missingFrames = clamp(parseInt(e.target.value, 10) || 3, 1, 20); e.target.value = s.missingFrames; saveSettingsSoon(); };
   }
 
+  /* ---------- updater ---------- */
+  var upd = { busy: false, info: null };
+  function askUpdate(info) {
+    upd.info = info;
+    var vb = $('#sideVer'); if (vb) { vb.textContent = 'Có bản mới: ' + info.version; vb.className = 'vbadge new'; }
+    if ($('#updModal')) return;
+    var bg = el('div', { class: 'modal-bg', id: 'updModal' });
+    var close = function () { bg.remove(); };
+    var yes = el('button', { type: 'button', class: 'btn primary', text: 'Cập nhật ngay' });
+    var no = el('button', { type: 'button', class: 'btn ghost', text: 'Để sau', onclick: close });
+    yes.onclick = function () { close(); doUpdate(); };
+    bg.appendChild(el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' },
+      el('h2', { text: 'Có bản cập nhật mới' }),
+      el('p', { text: 'Phiên bản ' + info.version + ' đã sẵn sàng. App sẽ tải về, tự cài và mở lại; cấu hình của bạn được giữ nguyên.' }),
+      info.notes ? el('div', { class: 'notes', text: info.notes }) : null,
+      el('div', { class: 'row' }, no, yes)));
+    document.body.appendChild(bg);
+  }
+  function doUpdate() {
+    if (upd.busy) return;
+    upd.busy = true;
+    toast('Đang tải và cài bản cập nhật… app sẽ tự mở lại.', 'info');
+    var b = $('#btnCheckUpd'); if (b) b.disabled = true;
+    API.invoke('install_update').catch(function (e) { upd.busy = false; if (b) b.disabled = false; fail(e); });
+  }
+  function checkUpdate() {
+    var st = $('#updStatus'), b = $('#btnCheckUpd');
+    if (st) st.textContent = 'Đang kiểm tra…';
+    if (b) b.disabled = true;
+    return API.invoke('check_for_update').then(function (r) {
+      b.disabled = false;
+      if (r.update) { st.textContent = 'Có bản mới: ' + r.update.version; askUpdate(r.update); }
+      else st.textContent = 'Bạn đang dùng bản mới nhất.';
+    }).catch(function (e) { b.disabled = false; st.textContent = ''; fail(e); });
+  }
+  function bindUpdate() {
+    API.invoke('get_app_version').then(function (v) {
+      $('#updVer').textContent = v;
+      if (!upd.info) $('#sideVer').textContent = v;
+    });
+    $('#btnCheckUpd').onclick = checkUpdate;
+    $('#sideVer').onclick = function () { if (upd.info) askUpdate(upd.info); };
+    API.listen('app-update-available', askUpdate);
+  }
+
   /* ---------- template ---------- */
   function navBtn(id, label, extra) {
     return '<button type="button" data-go="' + id + '">' + ICON[id] + '<span>' + label + '</span>' + (extra || '') + '</button>';
@@ -654,7 +699,8 @@ var Manager = (function () {
     navBtn('settings', 'Cài đặt'),
     '</div>',
     '<div class="side-foot"><span class="lbl">Cửa sổ game</span><span class="val" id="sideTarget"></span>',
-    '<div class="kv"><span class="lbl">Phím bật/tắt</span><kbd id="sideHotkey">—</kbd></div></div>',
+    '<div class="kv"><span class="lbl">Phím bật/tắt</span><kbd id="sideHotkey">—</kbd></div>',
+    '<div class="kv"><span class="lbl">Phiên bản</span><span class="vbadge" id="sideVer" title="Bấm để cập nhật khi có bản mới">—</span></div></div>',
     '</nav>',
 
     '<div class="main">',
@@ -729,7 +775,7 @@ var Manager = (function () {
     '<section class="page" data-page="settings">',
     '<header class="phead"><div><h1>Cài đặt</h1></div></header>',
     '<div class="tabs" role="tablist"><button type="button" role="tab" data-tab="overlay">Cửa sổ nổi</button><button type="button" role="tab" data-tab="sound">Âm thanh</button>',
-    '<button type="button" role="tab" data-tab="hotkey">Phím tắt</button><button type="button" role="tab" data-tab="adv">Nâng cao</button></div>',
+    '<button type="button" role="tab" data-tab="hotkey">Phím tắt</button><button type="button" role="tab" data-tab="adv">Nâng cao</button><button type="button" role="tab" data-tab="about">Phiên bản</button></div>',
 
     '<div class="tabpane cols" data-tab="overlay"><section class="panel wide">',
     '<div class="grid2"><label class="fld"><span>Độ đậm nền <b id="ovOpacityVal"></b></span><input id="ovOpacity" type="range" min="30" max="100"></label>',
@@ -759,6 +805,10 @@ var Manager = (function () {
     '<div class="grid2"><label class="fld"><span>Khung xác nhận buff xuất hiện</span><input id="advConfirm" type="number" min="1" max="10"></label>',
     '<label class="fld"><span>Khung xác nhận buff biến mất</span><input id="advMissing" type="number" min="1" max="20"></label></div>',
     '<p class="hint">Nhỏ thì phản ứng nhanh hơn nhưng dễ báo nhầm; mặc định 2 và 3. Mốc hồi chiêu luôn tính từ khung hình đầu tiên thấy buff.</p></div>',
+    '<div class="tabpane panel" data-tab="about" style="flex-direction:column;max-width:600px">',
+    '<div style="display:flex;gap:8px;align-items:baseline"><span class="muted">Phiên bản hiện tại</span><b id="updVer" class="mono"></b></div>',
+    '<div class="row"><button id="btnCheckUpd" type="button" class="btn primary">Kiểm tra cập nhật</button><span id="updStatus" class="hint"></span></div>',
+    '<p class="hint">App tự kiểm tra khi mở. Nếu có bản mới sẽ hỏi bạn; chọn cập nhật thì app tự tải, thay file và mở lại. Cấu hình, buff, hẹn giờ và macro được giữ nguyên.</p></div>',
     '</section>',
 
     '</div></div>',
@@ -813,7 +863,7 @@ var Manager = (function () {
       $('#btnFSound').onclick = function () { playAsset($('#fSound').value); };
       $('#btnFImport').onclick = importSound;
       $('#fName').value = 'Buff ' + (group().icons.length + 1);
-      renderBuffs(); bindSound(); bindOverlay(); bindAdvanced(); bindHotkey(); setMode('search'); showRegion(); refreshStatus();
+      renderBuffs(); bindSound(); bindOverlay(); bindAdvanced(); bindHotkey(); bindUpdate(); setMode('search'); showRegion(); refreshStatus();
       Timers.init({ cfg: cfg, setState: setState, toast: toast, fail: fail, addLog: addLog, soundSelect: soundSelect });
       Macros.init({ cfg: cfg, setState: setState, toast: toast, fail: fail, addLog: addLog, go: go });
       return loadWindows(false);

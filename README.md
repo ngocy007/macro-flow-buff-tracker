@@ -19,7 +19,7 @@
 
 Yêu cầu: Windows 10 / 11 64-bit có **Microsoft Edge WebView2 Runtime** (Windows 11 có sẵn; nếu app không mở được trên Windows 10, tải WebView2 tại [trang của Microsoft](https://developer.microsoft.com/microsoft-edge/webview2/)).
 
-**Cập nhật:** tải bản zip mới và giải nén đè lên thư mục cũ. Cấu hình, buff, hẹn giờ và macro của bạn nằm trong `%APPDATA%\com.macroflow.recovered\buff-assistant`, không bị mất khi cập nhật.
+**Cập nhật:** app tự kiểm tra bản mới khi mở và hiện hộp thoại hỏi; bấm **Cập nhật ngay** là app tự tải, thay file và mở lại. Muốn kiểm tra thủ công: **Cài đặt › Phiên bản › Kiểm tra cập nhật**. (Bản đầu tiên có tính năng này vẫn phải tải zip thủ công một lần.) Cấu hình, buff, hẹn giờ và macro nằm trong `%APPDATA%com.macroflow.recovereduff-assistant`, không bị mất khi cập nhật.
 
 Mỗi lần có commit mới vào nhánh `main`, GitHub Actions tự build và đăng bản mới lên Releases (bản cũ bị xóa), nên link trên luôn là bản mới nhất.
 
