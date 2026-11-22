@@ -504,6 +504,16 @@ fn rect_px(v: &Value, w: u32, h: u32) -> (u32, u32, u32, u32) {
     (x, y, rw, rh)
 }
 
+/// Per-icon `searchRect` takes priority over the global `searchRegion` in the monitor, so a newly
+/// saved global region would be silently ignored. Drop the per-icon overrides when it changes.
+fn clear_icon_search_rects(cfg: &mut Value) {
+    if let Some(arr) = cfg["buffGroup"]["icons"].as_array_mut() {
+        for ic in arr {
+            ic["searchRect"] = Value::Null;
+        }
+    }
+}
+
 #[tauri::command]
 fn save_buff_template(
     app: AppHandle,
@@ -540,6 +550,7 @@ fn save_buff_template(
     {
         let mut c = sh.cfg.lock();
         c["searchRegion"] = search_region;
+        clear_icon_search_rects(&mut c);
         c["template"] = json!({ "id": id, "width": cw, "height": ch });
     }
     sh.save();
@@ -618,7 +629,11 @@ fn list_buff_sound_templates(sh: S) -> Vec<Value> {
 
 #[tauri::command]
 fn set_buff_search_region(app: AppHandle, sh: S, search_region: Value) -> Res<Value> {
-    sh.cfg.lock()["searchRegion"] = search_region;
+    {
+        let mut c = sh.cfg.lock();
+        c["searchRegion"] = search_region;
+        clear_icon_search_rects(&mut c);
+    }
     sh.save();
     Ok(emit_state(&app, &sh))
 }
